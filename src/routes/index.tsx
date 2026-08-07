@@ -43,6 +43,32 @@ function formatAssetPath(assetPath: string, addC: boolean) {
 
 type Status = "idle" | "loading" | "ready" | "error";
 
+function previewUrl(apiPath: string) {
+  return `https://fortnitecentral.genxgames.gg/api/v1/export?path=${encodeURIComponent(
+    apiPath,
+  )}&raw=true`;
+}
+
+function AssetThumb({ apiPath }: { apiPath: string }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-border bg-muted/40">
+      {failed ? (
+        <span className="text-[10px] font-semibold text-muted-foreground">N/A</span>
+      ) : (
+        <img
+          src={previewUrl(apiPath)}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onError={() => setFailed(true)}
+          className="size-full object-contain"
+        />
+      )}
+    </span>
+  );
+}
+
 function Index() {
   const [status, setStatus] = useState<Status>("idle");
   const [count, setCount] = useState(0);
