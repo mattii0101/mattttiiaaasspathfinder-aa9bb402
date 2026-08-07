@@ -53,8 +53,16 @@ function thumbCandidates(apiPath: string) {
   const cleanPath = apiPath.split(".")[0] ?? apiPath;
   const segments = cleanPath.split("/").filter(Boolean);
   const basename = segments.at(-1) ?? "";
-  const cosmeticPrefixes = /^(cid|bid|eid|glider|pickaxe|wrap|musicpack|loadingscreen|trails)_/i;
-  const possibleIds = [basename, ...segments.filter((part) => cosmeticPrefixes.test(part))];
+  const cosmeticId = /(cid|bid|eid|glider|pickaxe|wrap|musicpack|loadingscreen|trails)_[a-z0-9_]+/i;
+  const possibleIds = [basename];
+
+  // Cosmetic IDs are often embedded in wrapper assets such as
+  // DA_Featured_CID_069_... or JIDO_CID_069_.... Start at the embedded ID so
+  // those assets can share the same thumbnail as the underlying cosmetic.
+  for (const segment of segments) {
+    const match = segment.match(cosmeticId);
+    if (match?.[0]) possibleIds.push(match[0]);
+  }
 
   // Asset files frequently add material, mesh, or style suffixes to the real
   // cosmetic ID. Try progressively shorter IDs until the CDN finds the item.
