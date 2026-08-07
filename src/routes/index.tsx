@@ -131,15 +131,17 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border/60 bg-card/40 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-3">
-            <span className="grid size-9 place-items-center rounded-lg bg-primary font-black text-primary-foreground">
+      <header className="sticky top-0 z-10 border-b border-border/60 bg-card/80 backdrop-blur">
+        <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:flex sm:justify-between sm:px-5 sm:py-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary font-black text-primary-foreground">
               FN
             </span>
-            <div>
-              <h1 className="text-base font-bold tracking-tight">Asset Path Finder</h1>
-              <p className="text-xs text-muted-foreground">
+            <div className="min-w-0">
+              <h1 className="truncate text-base font-bold tracking-tight">
+                Asset Path Finder
+              </h1>
+              <p className="truncate text-xs text-muted-foreground">
                 {status === "ready"
                   ? `${count.toLocaleString()} paths indexed`
                   : status === "loading"
@@ -151,7 +153,7 @@ function Index() {
             </div>
           </div>
           <span
-            className={`size-2.5 rounded-full ${
+            className={`size-2.5 shrink-0 rounded-full ${
               status === "ready"
                 ? "bg-accent"
                 : status === "error"
@@ -163,8 +165,8 @@ function Index() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-5 py-8">
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-lg shadow-black/20">
+      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-5 sm:py-8">
+        <section className="rounded-2xl border border-border bg-card p-4 shadow-lg shadow-black/20 sm:p-5">
           <label
             htmlFor="keywords"
             className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
