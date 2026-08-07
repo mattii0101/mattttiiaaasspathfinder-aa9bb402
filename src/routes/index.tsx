@@ -43,6 +43,32 @@ function formatAssetPath(assetPath: string, addC: boolean) {
 
 type Status = "idle" | "loading" | "ready" | "error";
 
+function previewUrl(apiPath: string) {
+  return `https://fortnitecentral.genxgames.gg/api/v1/export?path=${encodeURIComponent(
+    apiPath,
+  )}&raw=true`;
+}
+
+function AssetThumb({ apiPath }: { apiPath: string }) {
+  const [failed, setFailed] = useState(false);
+  return (
+    <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-border bg-muted/40">
+      {failed ? (
+        <span className="text-[10px] font-semibold text-muted-foreground">N/A</span>
+      ) : (
+        <img
+          src={previewUrl(apiPath)}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          onError={() => setFailed(true)}
+          className="size-full object-contain"
+        />
+      )}
+    </span>
+  );
+}
+
 function Index() {
   const [status, setStatus] = useState<Status>("idle");
   const [count, setCount] = useState(0);
@@ -105,15 +131,17 @@ function Index() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="border-b border-border/60 bg-card/40 backdrop-blur">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-5 py-4">
-          <div className="flex items-center gap-3">
-            <span className="grid size-9 place-items-center rounded-lg bg-primary font-black text-primary-foreground">
+      <header className="sticky top-0 z-10 border-b border-border/60 bg-card/80 backdrop-blur">
+        <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:flex sm:justify-between sm:px-5 sm:py-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary font-black text-primary-foreground">
               FN
             </span>
-            <div>
-              <h1 className="text-base font-bold tracking-tight">Asset Path Finder</h1>
-              <p className="text-xs text-muted-foreground">
+            <div className="min-w-0">
+              <h1 className="truncate text-base font-bold tracking-tight">
+                Asset Path Finder
+              </h1>
+              <p className="truncate text-xs text-muted-foreground">
                 {status === "ready"
                   ? `${count.toLocaleString()} paths indexed`
                   : status === "loading"
@@ -125,7 +153,7 @@ function Index() {
             </div>
           </div>
           <span
-            className={`size-2.5 rounded-full ${
+            className={`size-2.5 shrink-0 rounded-full ${
               status === "ready"
                 ? "bg-accent"
                 : status === "error"
@@ -137,8 +165,8 @@ function Index() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-5xl px-5 py-8">
-        <section className="rounded-2xl border border-border bg-card p-5 shadow-lg shadow-black/20">
+      <main className="mx-auto max-w-5xl px-4 py-6 sm:px-5 sm:py-8">
+        <section className="rounded-2xl border border-border bg-card p-4 shadow-lg shadow-black/20 sm:p-5">
           <label
             htmlFor="keywords"
             className="text-xs font-semibold uppercase tracking-widest text-muted-foreground"
@@ -205,32 +233,40 @@ function Index() {
           <ul className="mt-3 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card">
             {shown.map((raw, i) => {
               const display = formatted ? formatAssetPath(raw, addC) : raw;
-              const apiPath = display.endsWith("_C") ? display.slice(0, -2) : display;
+              const apiPath = formatAssetPath(raw, false);
               return (
                 <li
                   key={`${raw}-${i}`}
-                  className="flex items-center gap-3 px-4 py-3 transition hover:bg-muted/50"
+                  className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-3 px-3 py-3 transition hover:bg-muted/50 sm:flex sm:px-4"
                 >
-                  <span className="w-10 shrink-0 text-xs tabular-nums text-muted-foreground">
-                    {i + 1}
-                  </span>
-                  <span className="flex-1 truncate font-mono text-xs sm:text-sm" title={display}>
-                    {display}
-                  </span>
-                  <a
-                    href={`https://fortnitecentral.genxgames.gg/api/v1/export?path=${encodeURIComponent(apiPath)}&raw=true`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground transition hover:border-primary hover:text-primary"
-                  >
-                    JSON
-                  </a>
-                  <button
-                    onClick={() => void copy(display)}
-                    className="rounded-lg border border-border px-2 py-1 text-xs text-muted-foreground transition hover:border-primary hover:text-primary"
-                  >
-                    {copied === display ? "Copied" : "Copy"}
-                  </button>
+                  <AssetThumb apiPath={apiPath} />
+                  <div className="min-w-0 sm:flex sm:min-w-0 sm:flex-1 sm:items-center sm:gap-3">
+                    <span className="hidden w-8 shrink-0 text-xs tabular-nums text-muted-foreground sm:block">
+                      {i + 1}
+                    </span>
+                    <span
+                      className="block break-all font-mono text-[11px] leading-snug sm:flex-1 sm:truncate sm:break-normal sm:text-sm"
+                      title={display}
+                    >
+                      {display}
+                    </span>
+                  </div>
+                  <div className="col-span-2 flex gap-2 sm:col-span-1 sm:shrink-0">
+                    <a
+                      href={previewUrl(apiPath)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex-1 rounded-lg border border-border px-3 py-1.5 text-center text-xs text-muted-foreground transition hover:border-primary hover:text-primary sm:flex-none sm:px-2 sm:py-1"
+                    >
+                      JSON
+                    </a>
+                    <button
+                      onClick={() => void copy(display)}
+                      className="flex-1 rounded-lg border border-border px-3 py-1.5 text-xs text-muted-foreground transition hover:border-primary hover:text-primary sm:flex-none sm:px-2 sm:py-1"
+                    >
+                      {copied === display ? "Copied" : "Copy"}
+                    </button>
+                  </div>
                 </li>
               );
             })}
