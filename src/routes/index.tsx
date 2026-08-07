@@ -33,7 +33,7 @@ function formatAssetPath(assetPath: string, addC: boolean) {
     p = p.replace("FortniteGame/Content", "/Game").replace(".uasset", "");
   } else {
     const match = p.match(/\/([^/]+)\/Content\/(.+)/);
-    if (match) p = `/${match[1]}/${match[2].replace(".uasset", "")}`;
+    if (match) p = `/${match[1]}/${(match[2] ?? "").replace(".uasset", "")}`;
   }
   const last = p.substring(p.lastIndexOf("/") + 1);
   p += `.${last}`;
