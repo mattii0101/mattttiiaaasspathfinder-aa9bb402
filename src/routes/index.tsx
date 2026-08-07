@@ -50,14 +50,27 @@ function previewUrl(apiPath: string) {
 }
 
 function thumbCandidates(apiPath: string) {
-  const id = (apiPath.split("/").pop() ?? "").split(".")[0]?.toLowerCase();
-  if (!id) return [];
-  return [
+  const cleanPath = apiPath.split(".")[0] ?? apiPath;
+  const segments = cleanPath.split("/").filter(Boolean);
+  const basename = segments.at(-1) ?? "";
+  const cosmeticPrefixes = /^(cid|bid|eid|glider|pickaxe|wrap|musicpack|loadingscreen|trails)_/i;
+  const possibleIds = [basename, ...segments.filter((part) => cosmeticPrefixes.test(part))];
+
+  // Asset files frequently add material, mesh, or style suffixes to the real
+  // cosmetic ID. Try progressively shorter IDs until the CDN finds the item.
+  for (const value of [...possibleIds]) {
+    const parts = value.split("_");
+    while (parts.length > 3) {
+      parts.pop();
+      possibleIds.push(parts.join("_"));
+    }
+  }
+
+  const ids = [...new Set(possibleIds.filter(Boolean).map((id) => id.toLowerCase()))];
+  return ids.flatMap((id) => [
     `https://fortnite-api.com/images/cosmetics/br/${id}/smallicon.png`,
     `https://fortnite-api.com/images/cosmetics/br/${id}/icon.png`,
-    `https://fortnite-api.com/images/cosmetics/${id}/smallicon.png`,
-    `https://fortnite-api.com/images/cosmetics/${id}/icon.png`,
-  ];
+  ]);
 }
 
 function AssetThumb({ apiPath }: { apiPath: string }) {
@@ -75,8 +88,8 @@ function AssetThumb({ apiPath }: { apiPath: string }) {
   return (
     <span className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-border bg-muted/40">
       {!loaded && (
-        <span className="absolute text-[10px] font-semibold text-muted-foreground">
-          {src ? "…" : "N/A"}
+        <span className="absolute grid size-full place-items-center bg-primary/10 text-xs font-black text-primary">
+          FN
         </span>
       )}
       {src && (
