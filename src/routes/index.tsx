@@ -49,66 +49,32 @@ function previewUrl(apiPath: string) {
   )}&raw=true`;
 }
 
-function thumbCandidates(apiPath: string) {
-  const cleanPath = apiPath.split(".")[0] ?? apiPath;
-  const segments = cleanPath.split("/").filter(Boolean);
-  const basename = segments.at(-1) ?? "";
-  const cosmeticId = /(cid|bid|eid|glider|pickaxe|wrap|musicpack|loadingscreen|trails)_[a-z0-9_]+/i;
-  const possibleIds = [basename];
-
-  // Cosmetic IDs are often embedded in wrapper assets such as
-  // DA_Featured_CID_069_... or JIDO_CID_069_.... Start at the embedded ID so
-  // those assets can share the same thumbnail as the underlying cosmetic.
-  for (const segment of segments) {
-    const match = segment.match(cosmeticId);
-    if (match?.[0]) possibleIds.push(match[0]);
-  }
-
-  // Asset files frequently add material, mesh, or style suffixes to the real
-  // cosmetic ID. Try progressively shorter IDs until the CDN finds the item.
-  for (const value of [...possibleIds]) {
-    const parts = value.split("_");
-    while (parts.length > 3) {
-      parts.pop();
-      possibleIds.push(parts.join("_"));
-    }
-  }
-
-  const ids = [...new Set(possibleIds.filter(Boolean).map((id) => id.toLowerCase()))];
-  return ids.flatMap((id) => [
-    `https://fortnite-api.com/images/cosmetics/br/${id}/smallicon.png`,
-    `https://fortnite-api.com/images/cosmetics/br/${id}/icon.png`,
-  ]);
-}
-
 function AssetThumb({ apiPath }: { apiPath: string }) {
-  const sources = useMemo(() => thumbCandidates(apiPath), [apiPath]);
-  const [idx, setIdx] = useState(0);
+  const src = `/api/public/asset-thumbnail?path=${encodeURIComponent(apiPath)}`;
   const [loaded, setLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
-    setIdx(0);
     setLoaded(false);
+    setFailed(false);
   }, [apiPath]);
-
-  const src = sources[idx];
 
   return (
     <span className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-border bg-muted/40">
       {!loaded && (
-        <span className="absolute grid size-full place-items-center bg-primary/10 text-xs font-black text-primary">
-          FN
+        <span className="absolute grid size-full place-items-center bg-primary/10 text-lg text-primary" aria-hidden>
+          {failed ? "◇" : "·"}
         </span>
       )}
-      {src && (
+      {!failed && (
         <img
           key={src}
           src={src}
-          alt=""
+          alt="Asset thumbnail"
           loading="lazy"
           decoding="async"
           onLoad={() => setLoaded(true)}
-          onError={() => setIdx((n) => n + 1)}
+          onError={() => setFailed(true)}
           className={`size-full object-contain transition-opacity ${
             loaded ? "opacity-100" : "opacity-0"
           }`}
