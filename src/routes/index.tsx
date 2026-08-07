@@ -49,25 +49,54 @@ function previewUrl(apiPath: string) {
   )}&raw=true`;
 }
 
+function thumbCandidates(apiPath: string) {
+  const id = (apiPath.split("/").pop() ?? "").split(".")[0]?.toLowerCase();
+  if (!id) return [];
+  return [
+    `https://fortnite-api.com/images/cosmetics/br/${id}/smallicon.png`,
+    `https://fortnite-api.com/images/cosmetics/br/${id}/icon.png`,
+    `https://fortnite-api.com/images/cosmetics/${id}/smallicon.png`,
+    `https://fortnite-api.com/images/cosmetics/${id}/icon.png`,
+  ];
+}
+
 function AssetThumb({ apiPath }: { apiPath: string }) {
-  const [failed, setFailed] = useState(false);
+  const sources = useMemo(() => thumbCandidates(apiPath), [apiPath]);
+  const [idx, setIdx] = useState(0);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    setIdx(0);
+    setLoaded(false);
+  }, [apiPath]);
+
+  const src = sources[idx];
+
   return (
-    <span className="grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-border bg-muted/40">
-      {failed ? (
-        <span className="text-[10px] font-semibold text-muted-foreground">N/A</span>
-      ) : (
+    <span className="relative grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-border bg-muted/40">
+      {!loaded && (
+        <span className="absolute text-[10px] font-semibold text-muted-foreground">
+          {src ? "…" : "N/A"}
+        </span>
+      )}
+      {src && (
         <img
-          src={previewUrl(apiPath)}
+          key={src}
+          src={src}
           alt=""
           loading="lazy"
           decoding="async"
-          onError={() => setFailed(true)}
-          className="size-full object-contain"
+          onLoad={() => setLoaded(true)}
+          onError={() => setIdx((n) => n + 1)}
+          className={`size-full object-contain transition-opacity ${
+            loaded ? "opacity-100" : "opacity-0"
+          }`}
         />
       )}
     </span>
   );
 }
+
 
 function Index() {
   const [status, setStatus] = useState<Status>("idle");
