@@ -10,33 +10,43 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicAssetThumbnailRouteImport } from './routes/api/public/asset-thumbnail'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicAssetThumbnailRoute = ApiPublicAssetThumbnailRouteImport.update({
+  id: '/api/public/asset-thumbnail',
+  path: '/api/public/asset-thumbnail',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/asset-thumbnail': typeof ApiPublicAssetThumbnailRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/asset-thumbnail': typeof ApiPublicAssetThumbnailRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/asset-thumbnail': typeof ApiPublicAssetThumbnailRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/api/public/asset-thumbnail'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/api/public/asset-thumbnail'
+  id: '__root__' | '/' | '/api/public/asset-thumbnail'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicAssetThumbnailRoute: typeof ApiPublicAssetThumbnailRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,12 +58,30 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/asset-thumbnail': {
+      id: '/api/public/asset-thumbnail'
+      path: '/api/public/asset-thumbnail'
+      fullPath: '/api/public/asset-thumbnail'
+      preLoaderRoute: typeof ApiPublicAssetThumbnailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicAssetThumbnailRoute: ApiPublicAssetThumbnailRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
