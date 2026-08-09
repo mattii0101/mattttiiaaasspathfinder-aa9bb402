@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FN Asset Path Finder — Search Fortnite Asset Paths</title>
+<meta name="description" content="Search Fortnite game asset paths by keyword, format them for UEFN, and copy or inspect the JSON export instantly." />
+<style>
+  :root{
+    --bg:#12131a; --fg:#e9e9ef; --card:#1b1c25; --muted:#2a2b36;
+    --muted-fg:#9b9cab; --border:#33343f; --primary:#ff8a3d; --primary-fg:#17181f;
+    --accent:#3ddc97; --destructive:#f2555a;
+  }
+  *{box-sizing:border-box;border-color:var(--border)}
+  body{margin:0;background:var(--bg);color:var(--fg);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  header{position:sticky;top:0;z-index:10;background:rgba(27,28,37,.85);backdrop-filter:blur(8px);border-bottom:1px solid var(--border)}
+  .bar{max-width:64rem;margin:0 auto;padding:.75rem 1rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
+  .logo{display:grid;place-items:center;width:2.25rem;height:2.25rem;border-radius:.5rem;background:var(--primary);color:var(--primary-fg);font-weight:900}
+  h1{font-size:1rem;margin:0;font-weight:700}
+  .sub{margin:0;font-size:.75rem;color:var(--muted-fg)}
+  .dot{width:.625rem;height:.625rem;border-radius:999px;background:var(--muted-fg)}
+  .dot.ready{background:var(--accent)} .dot.error{background:var(--destructive)}
+  main{max-width:64rem;margin:0 auto;padding:1.5rem 1rem}
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:1rem;padding:1rem}
+  label.tag{font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted-fg);font-weight:600}
+  .row{display:flex;gap:.75rem;margin-top:.5rem;flex-direction:column}
+  input[type=text]{flex:1;padding:.75rem 1rem;border-radius:.75rem;border:1px solid var(--border);background:var(--bg);color:var(--fg);font-size:.875rem;outline:none}
+  input[type=text]:focus{border-color:var(--primary)}
+  button.primary{background:var(--primary);color:var(--primary-fg);border:0;border-radius:.75rem;padding:.75rem 1.5rem;font-weight:600;cursor:pointer}
+  button.primary:disabled{opacity:.5;cursor:default}
+  .opts{display:flex;gap:1.25rem;margin-top:1rem;font-size:.875rem;flex-wrap:wrap}
+  .opts label{display:flex;align-items:center;gap:.5rem;cursor:pointer}
+  ul{list-style:none;margin:.75rem 0 0;padding:0;border:1px solid var(--border);border-radius:1rem;overflow:hidden;background:var(--card)}
+  li{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.75rem;align-items:center;padding:.75rem;border-top:1px solid var(--border)}
+  li:first-child{border-top:0}
+  .thumb{width:2.75rem;height:2.75rem;border-radius:.5rem;border:1px solid var(--border);background:var(--muted);display:grid;place-items:center;overflow:hidden;flex-shrink:0}
+  .thumb img{width:100%;height:100%;object-fit:contain}
+  .path{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:.7rem;word-break:break-all;line-height:1.35}
+  .actions{grid-column:1/-1;display:flex;gap:.5rem}
+  .actions a,.actions button{flex:1;text-align:center;font-size:.75rem;padding:.4rem .75rem;border-radius:.5rem;border:1px solid var(--border);background:transparent;color:var(--muted-fg);text-decoration:none;cursor:pointer}
+  .actions a:hover,.actions button:hover{border-color:var(--primary);color:var(--primary)}
+  .more{display:block;margin:1.25rem auto 0;padding:.6rem 1.25rem;border-radius:.75rem;border:1px solid var(--border);background:transparent;color:var(--fg);cursor:pointer}
+  .note{color:var(--muted-fg);font-size:.875rem;margin-top:1.5rem}
+  .err{margin-top:1.5rem;padding:.75rem 1rem;border-radius:.75rem;border:1px solid rgba(242,85,90,.4);background:rgba(242,85,90,.1);color:var(--destructive);font-size:.875rem}
+  @media(min-width:640px){
+    .row{flex-direction:row}
+    li{display:flex;padding:.75rem 1rem}
+    .path{font-size:.875rem;flex:1;word-break:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .actions{flex:0 0 auto}
+    .actions a,.actions button{flex:0 0 auto}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div style="display:flex;align-items:center;gap:.75rem;min-width:0">
+      <span class="logo">FN</span>
+      <div style="min-width:0">
+        <h1>Asset Path Finder</h1>
+        <p class="sub" id="status">Starting…</p>
+      </div>
+    </div>
+    <span class="dot" id="dot"></span>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <label class="tag" for="keywords">Assets</label>
+    <div class="row">
+      <input id="keywords" type="text" autocomplete="off" placeholder="Keywords separated by spaces or commas" />
+      <button class="primary" id="searchBtn" disabled>Loading…</button>
+    </div>
+    <div class="opts">
+      <label><input type="checkbox" id="formatted" /> Formatted</label>
+      <label><input type="checkbox" id="addC" /> Add _C</label>
+    </div>
+  </section>
+
+  <div id="error" class="err" hidden>Could not load the asset index. Try refreshing the page.</div>
+  <p id="count" class="note" hidden></p>
+  <ul id="list" hidden></ul>
+  <button class="more" id="moreBtn" hidden></button>
+  <p id="empty" class="note" hidden>No asset paths match those keywords.</p>
+</main>
+
+<script>
+const ASSETS_URL = "https://th3dryz69.github.io/FortniteToolsWeb/public/data/fortnite_assets.gz";
+const PAGE_SIZE = 200;
+const COSMETIC_ID = /(cid|bid|eid|glider|pickaxe|wrap|musicpack|loadingscreen|trails)_[a-z0-9_]+/gi;
+
+let assets = [], results = [], limit = PAGE_SIZE, submitted = "";
+
+const $ = (id) => document.getElementById(id);
+
+function formatAssetPath(assetPath, addC) {
+  let p = assetPath;
+  if (p.startsWith("FortniteGame/Content")) {
+    p = p.replace("FortniteGame/Content", "/Game").replace(".uasset", "");
+  } else {
+    const m = p.match(/\/([^/]+)\/Content\/(.+)/);
+    if (m) p = "/" + m[1] + "/" + (m[2] || "").replace(".uasset", "");
+  }
+  const last = p.substring(p.lastIndexOf("/") + 1);
+  p += "." + last;
+  if (addC) p += "_C";
+  return p;
+}
+
+function previewUrl(apiPath) {
+  return "https://fortnitecentral.genxgames.gg/api/v1/export?path=" + encodeURIComponent(apiPath) + "&raw=true";
+}
+
+function thumbnailCandidates(assetPath) {
+  const clean = assetPath.split(".")[0] || assetPath;
+  const segments = clean.split("/").filter(Boolean);
+  const ids = [];
+  for (const segment of segments) {
+    ids.push(segment);
+    for (const match of segment.matchAll(COSMETIC_ID)) if (match[0]) ids.push(match[0]);
+  }
+  for (const value of [...ids]) {
+    const parts = value.split("_");
+    while (parts.length > 3) { parts.pop(); ids.push(parts.join("_")); }
+  }
+  const unique = [...new Set(ids.filter(Boolean).map((id) => id.toLowerCase()))];
+  return unique.flatMap((id) => [
+    "https://fortnite-api.com/images/cosmetics/br/" + encodeURIComponent(id) + "/smallicon.png",
+    "https://fortnite-api.com/images/cosmetics/br/" + encodeURIComponent(id) + "/icon.png",
+  ]);
+}
+
+function makeThumb(apiPath) {
+  const wrap = document.createElement("span");
+  wrap.className = "thumb";
+  const candidates = thumbnailCandidates(apiPath);
+  let i = 0;
+  const img = document.createElement("img");
+  img.alt = "Asset thumbnail";
+  img.loading = "lazy";
+  img.decoding = "async";
+  img.referrerPolicy = "no-referrer";
+  img.style.opacity = "0";
+  img.onload = () => { img.style.opacity = "1"; };
+  img.onerror = () => { i += 1; if (i < candidates.length) img.src = candidates[i]; else img.remove(); };
+  if (candidates.length) { img.src = candidates[0]; wrap.appendChild(img); }
+  return wrap;
+}
+
+async function loadAssets() {
+  try {
+    const res = await fetch(ASSETS_URL);
+    if (!res.ok) throw new Error(String(res.status));
+    const buffer = await res.arrayBuffer();
+    const stream = new Blob([buffer]).stream().pipeThrough(new DecompressionStream("gzip"));
+    const text = await new Response(stream).text();
+    assets = text.split("\n").filter(Boolean);
+    $("status").textContent = assets.length.toLocaleString() + " paths indexed";
+    $("dot").className = "dot ready";
+    $("searchBtn").disabled = false;
+    $("searchBtn").textContent = "Search";
+  } catch {
+    $("status").textContent = "Index failed to load";
+    $("dot").className = "dot error";
+    $("error").hidden = false;
+  }
+}
+
+function search() {
+  limit = PAGE_SIZE;
+  submitted = $("keywords").value.trim();
+  const kws = submitted.toLowerCase().split(/[\s,]+/).filter(Boolean);
+  results = kws.length ? assets.filter((p) => { const l = p.toLowerCase(); return kws.every((k) => l.includes(k)); }) : [];
+  render();
+}
+
+function render() {
+  const list = $("list"), countEl = $("count");
+  list.innerHTML = "";
+  countEl.hidden = !submitted;
+  countEl.innerHTML = "<strong style='color:var(--primary)'>" + results.length.toLocaleString() + "</strong> result" + (results.length === 1 ? "" : "s") + " found";
+  $("empty").hidden = !(submitted && results.length === 0);
+
+  const shown = results.slice(0, limit);
+  list.hidden = shown.length === 0;
+  const formatted = $("formatted").checked, addC = $("addC").checked;
+
+  shown.forEach((raw, i) => {
+    const display = formatted ? formatAssetPath(raw, addC) : raw;
+    const apiPath = formatAssetPath(raw, false);
+    const li = document.createElement("li");
+    li.appendChild(makeThumb(apiPath));
+
+    const path = document.createElement("span");
+    path.className = "path";
+    path.title = display;
+    path.textContent = display;
+    li.appendChild(path);
+
+    const actions = document.createElement("div");
+    actions.className = "actions";
+    const a = document.createElement("a");
+    a.href = previewUrl(apiPath); a.target = "_blank"; a.rel = "noreferrer"; a.textContent = "JSON";
+    const btn = document.createElement("button");
+    btn.textContent = "Copy";
+    btn.onclick = async () => {
+      await navigator.clipboard.writeText(display);
+      btn.textContent = "Copied";
+      setTimeout(() => { btn.textContent = "Copy"; }, 1500);
+    };
+    actions.append(a, btn);
+    li.appendChild(actions);
+    list.appendChild(li);
+  });
+
+  const more = $("moreBtn");
+  const left = results.length - shown.length;
+  more.hidden = left <= 0;
+  more.textContent = "Load more (" + left.toLocaleString() + " left)";
+}
+
+$("searchBtn").onclick = search;
+$("keywords").addEventListener("keydown", (e) => { if (e.key === "Enter") search(); });
+$("formatted").onchange = render;
+$("addC").onchange = render;
+$("moreBtn").onclick = () => { limit += PAGE_SIZE; render(); };
+
+loadAssets();
+</script>
+</body>
+</html>
