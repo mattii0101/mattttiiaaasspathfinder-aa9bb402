@@ -155,6 +155,17 @@ export const Route = createFileRoute("/api/public/asset-thumbnail")({
           }
         }
 
+        // 3) Meshes/materials: match the distinctive part of the name.
+        for (const token of searchTokens(assetPath)) {
+          const url = await imageUrlFromToken(token);
+          if (url) {
+            const response = await streamImage(url);
+            if (response) return response;
+          }
+        }
+
+
+
         return new Response("Thumbnail unavailable", {
           status: 404,
           headers: { "cache-control": "public, max-age=3600" },
