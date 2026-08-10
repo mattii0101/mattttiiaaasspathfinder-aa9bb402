@@ -92,6 +92,40 @@ async function streamImage(url: string) {
   }
 }
 
+/** Generic naming noise found in mesh/material asset names. */
+const NOISE = new Set([
+  "cid","bid","eid","sk","sm","cp","mesh","meshes","body","bodies","head","heads","parts",
+  "athena","commando","male","female","med","lrg","sml","skeleton","mat","matda","lod",
+  "base","mi","tex","texture","material","default","new","old","test","proto","game",
+  "content","fortnitegame","characters","cosmetics","items","backpacks","assets","render",
+]);
+
+/** Distinctive name tokens (e.g. "PinkBear") for a contains-search fallback. */
+function searchTokens(assetPath: string) {
+  const file = (assetPath.split("/").pop() ?? assetPath).split(".")[0] ?? "";
+  const tokens = file
+    .split(/[_\-\s]+/)
+    .filter((t) => t.length > 3 && !NOISE.has(t.toLowerCase()) && !/^\d+$/.test(t));
+  return [...new Set(tokens)].sort((a, b) => b.length - a.length).slice(0, 3);
+}
+
+/** Look up a cosmetic whose id merely contains the token. */
+async function imageUrlFromToken(token: string) {
+  try {
+    const res = await fetch(
+      `https://fortnite-api.com/v2/cosmetics/br/search?id=${encodeURIComponent(
+        token,
+      )}&matchMethod=contains`,
+      { headers: { accept: "application/json", "user-agent": UA } },
+    );
+    if (!res.ok) return null;
+    const body = (await res.json()) as { data?: { images?: CosmeticImages } };
+    return pickImage(body.data?.images);
+  } catch {
+    return null;
+  }
+}
+
 export const Route = createFileRoute("/api/public/asset-thumbnail")({
   server: {
     handlers: {
@@ -120,6 +154,17 @@ export const Route = createFileRoute("/api/public/asset-thumbnail")({
             if (response) return response;
           }
         }
+
+        // 3) Meshes/materials: match the distinctive part of the name.
+        for (const token of searchTokens(assetPath)) {
+          const url = await imageUrlFromToken(token);
+          if (url) {
+            const response = await streamImage(url);
+            if (response) return response;
+          }
+        }
+
+
 
         return new Response("Thumbnail unavailable", {
           status: 404,
