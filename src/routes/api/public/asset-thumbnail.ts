@@ -126,12 +126,79 @@ async function imageUrlFromToken(token: string) {
   }
 }
 
+/**
+ * Fortnite Central is the preferred source, but it currently answers 503.
+ * A tiny circuit breaker keeps trying it occasionally; as soon as it is back
+ * up, requests go through it again automatically.
+ */
+const CENTRAL_COOLDOWN_MS = 5 * 60 * 1000;
+let centralDownUntil = 0;
+
+function centralUrl(assetPath: string) {
+  const clean = assetPath.replace(/\.uasset$/i, "");
+  return `https://fortnitecentral.genxgames.gg/api/v1/export?path=${encodeURIComponent(
+    clean,
+  )}&raw=true`;
+}
+
+/** Try Fortnite Central first; returns null when it is unavailable. */
+async function fromFortniteCentral(assetPath: string) {
+  if (Date.now() < centralDownUntil) return null;
+  try {
+    const res = await fetch(centralUrl(assetPath), {
+      headers: { accept: "image/png,image/*,application/json", "user-agent": UA },
+    });
+    if (res.status === 503 || res.status === 429 || res.status >= 500) {
+      centralDownUntil = Date.now() + CENTRAL_COOLDOWN_MS;
+      return null;
+    }
+    centralDownUntil = 0; // Central is healthy again.
+    const type = res.headers.get("content-type") ?? "";
+    if (res.ok && res.body && type.startsWith("image/")) {
+      return new Response(res.body, {
+        headers: {
+          "content-type": type,
+          "cache-control": "public, max-age=86400, s-maxage=604800",
+        },
+      });
+    }
+    if (res.ok && type.includes("json")) {
+      // Pull the first preview-image reference out of the export JSON.
+      const text = await res.text();
+      const match = text.match(
+        /"(?:AssetPathName|ObjectPath|LargePreviewImage|SmallPreviewImage)"\s*:\s*"([^"]*(?:Icon|Preview|T_|Texture)[^"]*)"/i,
+      );
+      if (match?.[1]) {
+        const nested = await fetch(centralUrl(match[1]), {
+          headers: { accept: "image/*", "user-agent": UA },
+        });
+        const nestedType = nested.headers.get("content-type") ?? "";
+        if (nested.ok && nested.body && nestedType.startsWith("image/")) {
+          return new Response(nested.body, {
+            headers: {
+              "content-type": nestedType,
+              "cache-control": "public, max-age=86400, s-maxage=604800",
+            },
+          });
+        }
+      }
+    }
+  } catch {
+    centralDownUntil = Date.now() + CENTRAL_COOLDOWN_MS;
+  }
+  return null;
+}
+
 export const Route = createFileRoute("/api/public/asset-thumbnail")({
   server: {
     handlers: {
       GET: async ({ request }) => {
         const assetPath = new URL(request.url).searchParams.get("path")?.slice(0, 500);
         if (!assetPath) return new Response("Missing path", { status: 400 });
+
+        // 0) Preferred source: Fortnite Central (skipped while it is down).
+        const central = await fromFortniteCentral(assetPath);
+        if (central) return central;
 
         const ids = candidateIds(assetPath);
 
@@ -143,6 +210,7 @@ export const Route = createFileRoute("/api/public/asset-thumbnail")({
             if (response) return response;
           }
         }
+
 
         // 2) Fall back to guessing the CDN image paths directly.
         for (const id of ids) {
