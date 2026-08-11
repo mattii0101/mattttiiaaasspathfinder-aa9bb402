@@ -244,12 +244,14 @@ export const Route = createFileRoute("/api/public/asset-thumbnail")({
           }
         }
 
-        // 3) Meshes/materials: match the distinctive part of the name.
-        for (const token of searchTokens(assetPath)) {
-          const url = await imageUrlFromToken(token);
-          if (url) {
-            const response = await streamImage(url);
-            if (response) return response;
+        // 3) Cosmetic meshes/materials only: match the distinctive name token.
+        if (looksCosmetic(assetPath)) {
+          for (const token of searchTokens(assetPath)) {
+            const url = await imageUrlFromToken(token);
+            if (url) {
+              const response = await streamImage(url);
+              if (response) return response;
+            }
           }
         }
 
