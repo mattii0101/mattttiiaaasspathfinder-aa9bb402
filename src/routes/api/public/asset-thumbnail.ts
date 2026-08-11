@@ -115,6 +115,7 @@ function searchTokens(assetPath: string) {
  * next to something that is not a skin at all.
  */
 function looksCosmetic(assetPath: string) {
+  COSMETIC_ID.lastIndex = 0;
   return (
     COSMETIC_ID.test(assetPath) ||
     /\/(Cosmetics|Athena|Heroes|Characters|Backpacks|Pickaxes|Gliders|Wraps|Emotes|Dances|Items\/Cosmetics)\//i.test(
