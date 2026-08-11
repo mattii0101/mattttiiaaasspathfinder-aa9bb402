@@ -105,8 +105,23 @@ function searchTokens(assetPath: string) {
   const file = (assetPath.split("/").pop() ?? assetPath).split(".")[0] ?? "";
   const tokens = file
     .split(/[_\-\s]+/)
-    .filter((t) => t.length > 3 && !NOISE.has(t.toLowerCase()) && !/^\d+$/.test(t));
+    .filter((t) => t.length > 4 && !NOISE.has(t.toLowerCase()) && !/^\d+$/.test(t));
   return [...new Set(tokens)].sort((a, b) => b.length - a.length).slice(0, 3);
+}
+
+/**
+ * Only cosmetic-looking paths may use the fuzzy fallbacks. Props, environments
+ * and generic meshes previously matched a random outfit, which showed a skin
+ * next to something that is not a skin at all.
+ */
+function looksCosmetic(assetPath: string) {
+  COSMETIC_ID.lastIndex = 0;
+  return (
+    COSMETIC_ID.test(assetPath) ||
+    /\/(Cosmetics|Athena|Heroes|Characters|Backpacks|Pickaxes|Gliders|Wraps|Emotes|Dances|Items\/Cosmetics)\//i.test(
+      assetPath,
+    )
+  );
 }
 
 /** Look up a cosmetic whose id merely contains the token. */
@@ -119,8 +134,15 @@ async function imageUrlFromToken(token: string) {
       { headers: { accept: "application/json", "user-agent": UA } },
     );
     if (!res.ok) return null;
-    const body = (await res.json()) as { data?: { images?: CosmeticImages } };
-    return pickImage(body.data?.images);
+    const body = (await res.json()) as {
+      data?: { id?: string; name?: string; images?: CosmeticImages };
+    };
+    const entry = body.data;
+    if (!entry) return null;
+    // Guard against unrelated matches: the token must really be in the id/name.
+    const haystack = `${entry.id ?? ""} ${entry.name ?? ""}`.toLowerCase();
+    if (!haystack.includes(token.toLowerCase())) return null;
+    return pickImage(entry.images);
   } catch {
     return null;
   }
@@ -223,12 +245,14 @@ export const Route = createFileRoute("/api/public/asset-thumbnail")({
           }
         }
 
-        // 3) Meshes/materials: match the distinctive part of the name.
-        for (const token of searchTokens(assetPath)) {
-          const url = await imageUrlFromToken(token);
-          if (url) {
-            const response = await streamImage(url);
-            if (response) return response;
+        // 3) Cosmetic meshes/materials only: match the distinctive name token.
+        if (looksCosmetic(assetPath)) {
+          for (const token of searchTokens(assetPath)) {
+            const url = await imageUrlFromToken(token);
+            if (url) {
+              const response = await streamImage(url);
+              if (response) return response;
+            }
           }
         }
 
