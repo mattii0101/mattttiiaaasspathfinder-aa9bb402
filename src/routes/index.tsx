@@ -44,7 +44,7 @@ function formatAssetPath(assetPath: string, addC: boolean) {
 type Status = "idle" | "loading" | "ready" | "error";
 
 function previewUrl(apiPath: string) {
-  return `https://fortnitecentral.genxgames.gg/api/v1/export?path=${encodeURIComponent(
+  return `https://export-service-new.dillyapis.com/v1/export?path=${encodeURIComponent(
     apiPath,
   )}&raw=true`;
 }
