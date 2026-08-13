@@ -44,7 +44,7 @@ function formatAssetPath(assetPath: string, addC: boolean) {
 type Status = "idle" | "loading" | "ready" | "error";
 
 function previewUrl(apiPath: string) {
-  return `/api/public/asset-json?path=${encodeURIComponent(apiPath)}`;
+  return `/json?path=${encodeURIComponent(apiPath)}`;
 }
 
 
