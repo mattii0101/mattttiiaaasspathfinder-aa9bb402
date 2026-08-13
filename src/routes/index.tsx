@@ -23,8 +23,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const ASSETS_URL =
-  "https://th3dryz69.github.io/FortniteToolsWeb/public/data/fortnite_assets.gz";
+const ASSETS_URL = assetIndex.url;
 const PAGE_SIZE = 200;
 
 function formatAssetPath(assetPath: string, addC: boolean) {
