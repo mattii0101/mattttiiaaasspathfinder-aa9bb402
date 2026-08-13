@@ -230,6 +230,18 @@ function Index() {
           </div>
         </section>
 
+        {!submitted && status === "ready" && (
+          <a
+            href="https://discord.gg/zEY9sAUEvA"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-6 flex items-center justify-center gap-2 rounded-xl border border-[#5865F2]/30 bg-[#5865F2]/10 px-4 py-3 text-sm font-medium text-[#5865F2] transition hover:bg-[#5865F2]/20"
+          >
+            <span aria-hidden>💬</span>
+            Join my Discord server
+          </a>
+        )}
+
         {status === "error" && (
           <p className="mt-6 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
             Could not load the asset index. Try refreshing the page.
