@@ -211,6 +211,65 @@ async function fromFortniteCentral(assetPath: string) {
   return null;
 }
 
+/** Dilly export service: JSON metadata (raw=true) and PNG textures (raw=false). */
+const DILLY = "https://export-service-new.dillyapis.com/v1/export";
+
+function dillyUrl(path: string, raw: boolean) {
+  const clean = path.replace(/\.uasset$/i, "");
+  return `${DILLY}?path=${encodeURIComponent(clean)}&raw=${raw}`;
+}
+
+async function dillyImage(path: string) {
+  try {
+    const res = await fetch(dillyUrl(path, false), {
+      headers: { accept: "image/png,image/*", "user-agent": UA },
+    });
+    const type = res.headers.get("content-type") ?? "";
+    if (res.ok && res.body && type.startsWith("image/")) {
+      return new Response(res.body, {
+        headers: {
+          "content-type": type,
+          "cache-control": "public, max-age=86400, s-maxage=604800",
+        },
+      });
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
+/** Export the asset JSON, find its preview texture, then export that as PNG. */
+async function fromDilly(assetPath: string) {
+  // Texture assets render directly.
+  const direct = await dillyImage(assetPath);
+  if (direct) return direct;
+
+  try {
+    const res = await fetch(dillyUrl(assetPath, true), {
+      headers: { accept: "application/json", "user-agent": UA },
+    });
+    if (!res.ok) return null;
+    const text = await res.text();
+    const refs = [
+      ...text.matchAll(
+        /"(?:AssetPathName|ObjectPath|ObjectName)"\s*:\s*"([^"]*(?:Icon|Preview|T_|T-|Texture)[^"]*)"/gi,
+      ),
+    ]
+      .map((m) => (m[1] ?? "").split("'").pop()!.replace(/"/g, ""))
+      .map((p) => p.split(".")[0] ?? p)
+      .filter(Boolean);
+
+    for (const ref of [...new Set(refs)].slice(0, 4)) {
+      const image = await dillyImage(ref);
+      if (image) return image;
+    }
+  } catch {
+    // ignore
+  }
+  return null;
+}
+
 export const Route = createFileRoute("/api/public/asset-thumbnail")({
   server: {
     handlers: {
@@ -218,7 +277,11 @@ export const Route = createFileRoute("/api/public/asset-thumbnail")({
         const assetPath = new URL(request.url).searchParams.get("path")?.slice(0, 500);
         if (!assetPath) return new Response("Missing path", { status: 400 });
 
-        // 0) Preferred source: Fortnite Central (skipped while it is down).
+        // 0) Preferred source: the export service (real in-game textures).
+        const dilly = await fromDilly(assetPath);
+        if (dilly) return dilly;
+
+        // 0b) Fortnite Central, when it is up.
         const central = await fromFortniteCentral(assetPath);
         if (central) return central;
 
