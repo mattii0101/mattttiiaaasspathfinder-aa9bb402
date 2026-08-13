@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
+import assetIndex from "@/assets/fortnite_assets.gz.asset.json";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,8 +24,7 @@ export const Route = createFileRoute("/")({
   component: Index,
 });
 
-const ASSETS_URL =
-  "https://th3dryz69.github.io/FortniteToolsWeb/public/data/fortnite_assets.gz";
+const ASSETS_URL = assetIndex.url;
 const PAGE_SIZE = 200;
 
 function formatAssetPath(assetPath: string, addC: boolean) {
