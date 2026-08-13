@@ -48,6 +48,8 @@
   .actions a:hover,.actions button:hover{border-color:var(--primary);color:var(--primary)}
   .more{display:block;margin:1.25rem auto 0;padding:.6rem 1.25rem;border-radius:.75rem;border:1px solid var(--border);background:transparent;color:var(--fg);cursor:pointer}
   .note{color:var(--muted-fg);font-size:.875rem;margin-top:1.5rem}
+  .discord{margin-top:1.5rem;display:flex;align-items:center;justify-content:center;gap:.5rem;padding:.75rem 1rem;border-radius:.75rem;border:1px solid rgba(88,101,242,.3);background:rgba(88,101,242,.1);color:#5865F2;font-size:.875rem;font-weight:500;text-decoration:none;transition:background .15s}
+  .discord:hover{background:rgba(88,101,242,.2)}
   .err{margin-top:1.5rem;padding:.75rem 1rem;border-radius:.75rem;border:1px solid rgba(242,85,90,.4);background:rgba(242,85,90,.1);color:var(--destructive);font-size:.875rem}
   @media(min-width:640px){
     .row{flex-direction:row}
@@ -86,6 +88,9 @@
   </section>
 
   <div id="error" class="err" hidden>Could not load the asset index. Try refreshing the page.</div>
+  <a id="discord" class="discord" href="https://discord.gg/zEY9sAUEvA" target="_blank" rel="noreferrer" hidden>
+    <span>💬</span> Join my Discord server
+  </a>
   <p id="count" class="note" hidden></p>
   <ul id="list" hidden></ul>
   <button class="more" id="moreBtn" hidden></button>
@@ -188,6 +193,7 @@ function render() {
   countEl.hidden = !submitted;
   countEl.innerHTML = "<strong style='color:var(--primary)'>" + results.length.toLocaleString() + "</strong> result" + (results.length === 1 ? "" : "s") + " found";
   $("empty").hidden = !(submitted && results.length === 0);
+  $("discord").hidden = !!submitted;
 
   const shown = results.slice(0, limit);
   list.hidden = shown.length === 0;
