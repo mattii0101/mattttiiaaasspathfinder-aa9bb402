@@ -277,7 +277,11 @@ export const Route = createFileRoute("/api/public/asset-thumbnail")({
         const assetPath = new URL(request.url).searchParams.get("path")?.slice(0, 500);
         if (!assetPath) return new Response("Missing path", { status: 400 });
 
-        // 0) Preferred source: Fortnite Central (skipped while it is down).
+        // 0) Preferred source: the export service (real in-game textures).
+        const dilly = await fromDilly(assetPath);
+        if (dilly) return dilly;
+
+        // 0b) Fortnite Central, when it is up.
         const central = await fromFortniteCentral(assetPath);
         if (central) return central;
 
