@@ -150,9 +150,11 @@ function Index() {
       <header className="sticky top-0 z-10 border-b border-border/60 bg-card/80 backdrop-blur">
         <div className="mx-auto grid max-w-5xl grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 sm:flex sm:justify-between sm:px-5 sm:py-4">
           <div className="flex min-w-0 items-center gap-3">
-            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-primary font-black text-primary-foreground">
-              FN
-            </span>
+            <img
+              src="/icon-192.png"
+              alt="FN Asset Path Finder logo"
+              className="size-9 shrink-0 rounded-lg object-cover"
+            />
             <div className="min-w-0">
               <h1 className="truncate text-base font-bold tracking-tight">
                 Asset Path Finder
