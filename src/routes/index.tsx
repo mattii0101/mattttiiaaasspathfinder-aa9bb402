@@ -44,10 +44,9 @@ function formatAssetPath(assetPath: string, addC: boolean) {
 type Status = "idle" | "loading" | "ready" | "error";
 
 function previewUrl(apiPath: string) {
-  return `https://export-service-new.dillyapis.com/v1/export?path=${encodeURIComponent(
-    apiPath,
-  )}&raw=true`;
+  return `/api/public/asset-json?path=${encodeURIComponent(apiPath)}`;
 }
+
 
 function AssetThumb({ apiPath }: { apiPath: string }) {
   const src = `/api/public/asset-thumbnail?path=${encodeURIComponent(apiPath)}`;
