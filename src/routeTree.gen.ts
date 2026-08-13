@@ -10,11 +10,17 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiPublicAssetJsonRouteImport } from './routes/api/public/asset-json'
 import { Route as ApiPublicAssetThumbnailRouteImport } from './routes/api/public/asset-thumbnail'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicAssetJsonRoute = ApiPublicAssetJsonRouteImport.update({
+  id: '/api/public/asset-json',
+  path: '/api/public/asset-json',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicAssetThumbnailRoute = ApiPublicAssetThumbnailRouteImport.update({
@@ -25,27 +31,32 @@ const ApiPublicAssetThumbnailRoute = ApiPublicAssetThumbnailRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api/public/asset-json': typeof ApiPublicAssetJsonRoute
   '/api/public/asset-thumbnail': typeof ApiPublicAssetThumbnailRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api/public/asset-json': typeof ApiPublicAssetJsonRoute
   '/api/public/asset-thumbnail': typeof ApiPublicAssetThumbnailRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api/public/asset-json': typeof ApiPublicAssetJsonRoute
   '/api/public/asset-thumbnail': typeof ApiPublicAssetThumbnailRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/public/asset-thumbnail'
+  fullPaths: '/' | '/api/public/asset-json' | '/api/public/asset-thumbnail'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/public/asset-thumbnail'
-  id: '__root__' | '/' | '/api/public/asset-thumbnail'
+  to: '/' | '/api/public/asset-json' | '/api/public/asset-thumbnail'
+  id:
+    '__root__' | '/' | '/api/public/asset-json' | '/api/public/asset-thumbnail'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiPublicAssetJsonRoute: typeof ApiPublicAssetJsonRoute
   ApiPublicAssetThumbnailRoute: typeof ApiPublicAssetThumbnailRoute
 }
 
@@ -56,6 +67,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/asset-json': {
+      id: '/api/public/asset-json'
+      path: '/api/public/asset-json'
+      fullPath: '/api/public/asset-json'
+      preLoaderRoute: typeof ApiPublicAssetJsonRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/asset-thumbnail': {
@@ -70,6 +88,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiPublicAssetJsonRoute: ApiPublicAssetJsonRoute,
   ApiPublicAssetThumbnailRoute: ApiPublicAssetThumbnailRoute,
 }
 export const routeTree = rootRouteImport
