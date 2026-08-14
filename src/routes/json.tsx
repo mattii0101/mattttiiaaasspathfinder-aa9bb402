@@ -56,7 +56,14 @@ function JsonViewer() {
 
   return (
     <div className="min-h-screen bg-background px-4 py-6 sm:px-6">
-      <h1 className="font-mono text-2xl font-bold text-primary">JSON Viewer</h1>
+      <Link
+        to="/"
+        className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back
+      </Link>
+      <h1 className="mt-4 font-mono text-2xl font-bold text-primary">JSON Viewer</h1>
       <p className="mt-2 break-all font-mono text-sm leading-snug text-muted-foreground">
         {path ?? "—"}
       </p>
@@ -65,4 +72,5 @@ function JsonViewer() {
       </pre>
     </div>
   );
+
 }
