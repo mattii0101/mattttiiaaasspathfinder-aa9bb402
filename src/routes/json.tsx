@@ -1,6 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { z } from "zod";
+import { ArrowLeft } from "lucide-react";
+
 
 export const Route = createFileRoute("/json")({
   validateSearch: z.object({ path: z.string().optional() }),
