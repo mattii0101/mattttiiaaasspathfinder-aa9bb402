@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as JsonRouteImport } from './routes/json'
+import { Route as DotwellKnownDiscordRouteImport } from './routes/[.]well-known.discord'
 import { Route as ApiPublicAssetJsonRouteImport } from './routes/api/public/asset-json'
 import { Route as ApiPublicAssetThumbnailRouteImport } from './routes/api/public/asset-thumbnail'
 
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 const JsonRoute = JsonRouteImport.update({
   id: '/json',
   path: '/json',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DotwellKnownDiscordRoute = DotwellKnownDiscordRouteImport.update({
+  id: '/.well-known/discord',
+  path: '/.well-known/discord',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicAssetJsonRoute = ApiPublicAssetJsonRouteImport.update({
@@ -38,12 +44,14 @@ const ApiPublicAssetThumbnailRoute = ApiPublicAssetThumbnailRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/json': typeof JsonRoute
+  '/.well-known/discord': typeof DotwellKnownDiscordRoute
   '/api/public/asset-json': typeof ApiPublicAssetJsonRoute
   '/api/public/asset-thumbnail': typeof ApiPublicAssetThumbnailRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/json': typeof JsonRoute
+  '/.well-known/discord': typeof DotwellKnownDiscordRoute
   '/api/public/asset-json': typeof ApiPublicAssetJsonRoute
   '/api/public/asset-thumbnail': typeof ApiPublicAssetThumbnailRoute
 }
@@ -51,19 +59,30 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/json': typeof JsonRoute
+  '/.well-known/discord': typeof DotwellKnownDiscordRoute
   '/api/public/asset-json': typeof ApiPublicAssetJsonRoute
   '/api/public/asset-thumbnail': typeof ApiPublicAssetThumbnailRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/json' | '/api/public/asset-json' | '/api/public/asset-thumbnail'
+    | '/'
+    | '/json'
+    | '/.well-known/discord'
+    | '/api/public/asset-json'
+    | '/api/public/asset-thumbnail'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/json' | '/api/public/asset-json' | '/api/public/asset-thumbnail'
+  to:
+    | '/'
+    | '/json'
+    | '/.well-known/discord'
+    | '/api/public/asset-json'
+    | '/api/public/asset-thumbnail'
   id:
     | '__root__'
     | '/'
     | '/json'
+    | '/.well-known/discord'
     | '/api/public/asset-json'
     | '/api/public/asset-thumbnail'
   fileRoutesById: FileRoutesById
@@ -71,6 +90,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   JsonRoute: typeof JsonRoute
+  DotwellKnownDiscordRoute: typeof DotwellKnownDiscordRoute
   ApiPublicAssetJsonRoute: typeof ApiPublicAssetJsonRoute
   ApiPublicAssetThumbnailRoute: typeof ApiPublicAssetThumbnailRoute
 }
@@ -89,6 +109,13 @@ declare module '@tanstack/react-router' {
       path: '/json'
       fullPath: '/json'
       preLoaderRoute: typeof JsonRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/.well-known/discord': {
+      id: '/.well-known/discord'
+      path: '/.well-known/discord'
+      fullPath: '/.well-known/discord'
+      preLoaderRoute: typeof DotwellKnownDiscordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/asset-json': {
@@ -111,6 +138,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   JsonRoute: JsonRoute,
+  DotwellKnownDiscordRoute: DotwellKnownDiscordRoute,
   ApiPublicAssetJsonRoute: ApiPublicAssetJsonRoute,
   ApiPublicAssetThumbnailRoute: ApiPublicAssetThumbnailRoute,
 }
